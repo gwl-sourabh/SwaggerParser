@@ -105,19 +105,19 @@ let createTemplate = function(module, numCols, path, config, definition, uiInfoD
             if (fields[uiInfoDef.groups[key].fields[i]])
                 group.fields.push(fields[uiInfoDef.groups[key].fields[i]]);
             else
-                errors[fields[uiInfoDef.groups[key].fields[i]]] = "Field exists in x-ui-info groups section but not present in API specifications.";
+                errors[uiInfoDef.groups[key].fields[i]] = "Field exists in x-ui-info groups section but not present in API specifications.";
         }
         specifications.groups.push(group);
     }
 
     setLabels(localeFields);
 
-    if(Object.keys(errors).length) {
+    /*if(Object.keys(errors).length) {
         console.log("\x1b[31mERROR OCCURED! CANNOT PROCESS YAML.");
-        console.log(JSON.stringify(errors));
+        console.log(errors);
         console.log("\x1b[37m");
         process.exit();
-    }
+    }*/
 
     //==================================================================>>
     return specifications;
