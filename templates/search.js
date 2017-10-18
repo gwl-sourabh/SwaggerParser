@@ -1,12 +1,17 @@
 const getType = require('../utilities/utility').getType;
+const getTitleCase = require('../utilities/utility').getTitleCase;
+const setLabels = require('../utilities/utility').setLabels;
+
+let localeFields = {};
 
 let searchTemplate = function (module, numCols, path, config, definition) {
+	localeFields[module + ".search.title"] = getTitleCase("search");
 	let specifications = {
 		numCols: numCols,
 		useTimestamp: true,
 		objectName: '',
 		groups: [{
-			"name": "",
+			"name": "search",
 			"label": module + ".search.title",
 			"fields": []
 		}],
@@ -22,7 +27,7 @@ let searchTemplate = function (module, numCols, path, config, definition) {
 		if(parameterConfig[i].$ref && !/requestInfo|tenantId|pageSize|pageNumber|sortResult/.test(parameterConfig[i].$ref)) {
 			let splitArr = parameterConfig[i].$ref.split("/");
 			let paramKey = splitArr[splitArr.length-1];
-
+			localeFields[module + ".create" + paramKey] = getTitleCase(paramKey);
 			specifications.groups[0].fields.push({
 				"name": paramKey,
 				"jsonPath": paramKey,
@@ -39,6 +44,7 @@ let searchTemplate = function (module, numCols, path, config, definition) {
 		}
 	}
 
+	setLabels(localeFields);
 	return specifications;
 }
 

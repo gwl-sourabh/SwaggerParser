@@ -1,14 +1,35 @@
+const fs = require('fs');
+
+function setLabels(json) {
+    try {
+        var file = fs.readFileSync("locale.json");
+    } catch (e) {
+        var file = "";
+    }
+
+    if (file) {
+        json = Object.assign({}, JSON.parse(file), json);
+    }
+
+    fs.writeFileSync("locale.json", JSON.stringify(json));
+}
+
 function getType(type) {
-	switch(type) {
-		case 'integer': 
-		case 'float': 
-		case 'double': 
-		case 'long': return 'number';
-		case 'string': return 'text';
-		case 'boolean': return 'radio';
-		case 'date': 'datePicker';
-		default: return '';
-	}
+    switch (type) {
+        case 'integer':
+        case 'float':
+        case 'double':
+        case 'long':
+            return 'number';
+        case 'string':
+            return 'text';
+        case 'boolean':
+            return 'radio';
+        case 'date':
+            'datePicker';
+        default:
+            return '';
+    }
 }
 
 function getTitleCase(field) {
@@ -29,3 +50,4 @@ function getTitleCase(field) {
 
 exports.getTitleCase = getTitleCase;
 exports.getType = getType;
+exports.setLabels = setLabels;

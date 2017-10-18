@@ -1,5 +1,8 @@
 const getType = require('../utilities/utility').getType;
+const getTitleCase = require('../utilities/utility').getTitleCase;
+const setLabels = require('../utilities/utility').setLabels;
 
+let localeFields = {};
 let getFieldsFromInnerObject = function(objectName, fields, definition, module, jPath, isArray) {
     if (definition[objectName])
         for (let key in definition[objectName].properties) {
@@ -12,6 +15,7 @@ let getFieldsFromInnerObject = function(objectName, fields, definition, module, 
                 let refSplitArr = definition[objectName].properties[key].$ref.split("/");
                 getFieldsFromInnerObject(refSplitArr[refSplitArr.length - 1], fields, definition, module, (isArray ? (jPath + "[0]") : jPath) + "." + key);
             } else {
+                localeFields[module + ".create." + key] = getTitleCase(key);
                 fields[(isArray ? (jPath + "[0]") : jPath) + "." + key] = {
                     "name": key,
                     "jsonPath": (isArray ? (jPath + "[0]") : jPath) + "." + key,
@@ -87,6 +91,7 @@ let updateTemplate = function(module, numCols, path, config, definition, uiInfoD
     }
     
     for(var key in uiInfoDef.groups) {
+        localeFields[module + ".create.group.title." + key] = getTitleCase(key);
         let group = {
             name: key,
             label: module + ".create.group.title." + key,
@@ -97,6 +102,8 @@ let updateTemplate = function(module, numCols, path, config, definition, uiInfoD
         }
         specifications.groups.push(group);
     }
+
+    setLabels(localeFields);
     //==================================================================>>
     return specifications;
 }
