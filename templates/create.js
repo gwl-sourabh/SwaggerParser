@@ -1,9 +1,21 @@
 const getType = require('../utilities/utility').getType;
+const fs = require('fs');
+
+let setLabels = function(json) {
+    let file = fs.readFileSync("locale.json");
+    if(file) {
+        json = Object.assign({}, JSON.parse(file), json);
+    }
+
+    fs.writeFileSync(JSON.stringify(json));
+}
+
+let localeFields = {};
 
 let getFieldsFromInnerObject = function(objectName, fields, definition, module, jPath, isArray) {
     if (definition[objectName])
         for (let key in definition[objectName].properties) {
-            if (["tenantId", "auditDetails", "assigner"].indexOf(key) > -1) continue;
+            if (["id","tenantId", "auditDetails", "assigner"].indexOf(key) > -1) continue;
 
             if (definition[objectName].properties[key].type == "array") {
                 let refSplitArr = definition[objectName].properties[key].items.$ref.split("/");
@@ -29,28 +41,43 @@ let getFieldsFromInnerObject = function(objectName, fields, definition, module, 
         }
 }
 
-let createTemplate = function(module, numCols, path, config, definition, uiInfo) {
+let createTemplate = function(module, numCols, path, config, definition, uiInfoDef) {
     let specifications = {
         numCols: numCols,
         useTimestamp: true,
         objectName: '',
-        groups: []
+        groups: [],
+        url: path
     };
     let fields = {};
-    let splitArr = config["post"].parameters[0].schema.$ref.split("/");
+    let isArr = false;
+    let ind = 0;
+    for(var i=0; i<config["post"].parameters.length; i++) {
+        if(config["post"].parameters[i].schema) {
+            ind = i;
+            break;
+        }
+    }
+    let splitArr = config["post"].parameters[ind].schema.$ref.split("/");
     let properties = definition[splitArr[splitArr.length - 1]].properties;
     for (let key in properties) {
         if (key != "requestInfo") {
-            let propertiesArr = properties[key].$ref.split("/");
-            specifications.objectName = propertiesArr[propertiesArr.length - 1];
+            //IF ARRAY
+            if(properties[key].type == "array") {
+                let propertiesArr = properties[key].items.$ref.split("/");
+                specifications.objectName = propertiesArr[propertiesArr.length - 1];
+                isArr = true;
+            } else {
+                let propertiesArr = properties[key].$ref.split("/");
+                specifications.objectName = propertiesArr[propertiesArr.length - 1];
+            }
             break;
         }
     }
 
-    getFieldsFromInnerObject(specifications.objectName, fields, definition, module, specifications.objectName);
+    getFieldsFromInnerObject(specifications.objectName, fields, definition, module, isArr ? (specifications.objectName + "[0]") : specifications.objectName);
     
     //=======================CUSTOM FILE LOGIC==========================>>
-    var uiInfoDef = uiInfo.UIInfo;
     if(uiInfoDef.ExternalData && typeof uiInfoDef.ExternalData == "object" && Object.keys(uiInfoDef.ExternalData).length) {
     	for(var key in uiInfoDef.ExternalData) {
     		if(fields[key]) fields[key].url = uiInfoDef.ExternalData[key];
