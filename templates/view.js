@@ -3,7 +3,7 @@ const getTitleCase = require('../utilities/utility').getTitleCase;
 const setLabels = require('../utilities/utility').setLabels;
 
 let localeFields = {};
-
+let errors = {};
 let getFieldsFromInnerObject = function(objectName, fields, definition, module, jPath, isArray) {
     if (definition[objectName])
         for (let key in definition[objectName].properties) {
@@ -72,6 +72,8 @@ let viewTemplate = function(module, numCols, path, config, definition, uiInfoDef
     if(uiInfoDef.ExternalData && typeof uiInfoDef.ExternalData == "object" && Object.keys(uiInfoDef.ExternalData).length) {
     	for(var key in uiInfoDef.ExternalData) {
     		if(fields[key]) fields[key].url = uiInfoDef.ExternalData[key];
+            else
+                errors[key] = "Field exists in x-ui-info ExternalData section but not present in API specifications. REFERENCE PATH: " + uiInfoDef.referencePath;
     	}
     }
 
@@ -98,14 +100,25 @@ let viewTemplate = function(module, numCols, path, config, definition, uiInfoDef
     		fields: []
     	};
     	for(var i=0; i<uiInfoDef.groups[key].fields.length; i++) {
-    		group.fields.push(fields[uiInfoDef.groups[key].fields[i]]);
+    		if (fields[uiInfoDef.groups[key].fields[i]])
+                group.fields.push(fields[uiInfoDef.groups[key].fields[i]]);
+            else
+                errors[uiInfoDef.groups[key].fields[i]] = "Field exists in x-ui-info groups section but not present in API specifications. REFERENCE PATH: " + uiInfoDef.referencePath;
     	}
     	specifications.groups.push(group);
     }
 
     setLabels(localeFields);
+    if(Object.keys(errors).length) {
+
+        /*console.log("\x1b[31mERROR OCCURED! CANNOT PROCESS YAML.");
+        console.log(errors);
+        console.log("\x1b[37m");
+        process.exit();*/
+        return {specifications: specifications, errors: errors};
+    }
     //==================================================================>>
-    return specifications;
+    return {specifications: specifications};
 }
 
 module.exports = viewTemplate;

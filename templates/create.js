@@ -75,7 +75,7 @@ let createTemplate = function(module, numCols, path, config, definition, uiInfoD
         for (var key in uiInfoDef.ExternalData) {
             if (fields[key]) fields[key].url = uiInfoDef.ExternalData[key];
             else
-                errors[key] = "Field exists in x-ui-info ExternalData section but not present in API specifications.";
+                errors[key] = "Field exists in x-ui-info ExternalData section but not present in API specifications. REFERENCE PATH: " + uiInfoDef.referencePath;
         }
     }
 
@@ -105,22 +105,23 @@ let createTemplate = function(module, numCols, path, config, definition, uiInfoD
             if (fields[uiInfoDef.groups[key].fields[i]])
                 group.fields.push(fields[uiInfoDef.groups[key].fields[i]]);
             else
-                errors[uiInfoDef.groups[key].fields[i]] = "Field exists in x-ui-info groups section but not present in API specifications.";
+                errors[uiInfoDef.groups[key].fields[i]] = "Field exists in x-ui-info groups section but not present in API specifications. REFERENCE PATH: " + uiInfoDef.referencePath;
         }
         specifications.groups.push(group);
     }
 
     setLabels(localeFields);
+    if(Object.keys(errors).length) {
 
-    /*if(Object.keys(errors).length) {
-        console.log("\x1b[31mERROR OCCURED! CANNOT PROCESS YAML.");
+        /*console.log("\x1b[31mERROR OCCURED! CANNOT PROCESS YAML.");
         console.log(errors);
         console.log("\x1b[37m");
-        process.exit();
-    }*/
+        process.exit();*/
+        return {specifications: specifications, errors: errors};
+    }
 
     //==================================================================>>
-    return specifications;
+    return {specifications: specifications};
 }
 
 module.exports = createTemplate;

@@ -27,6 +27,7 @@ rl.question('Enter YAML URL/PATH: ', (yamlpath) => {
                             let basePath = yamlJSON.basePath;
                             let specifications = {};
                             let allUiInfo = {};
+                            let errors = {};
                             for (var i = 0; i < yamlJSON["x-ui-info"].UIInfo.length; i++) {
                                 allUiInfo[yamlJSON["x-ui-info"].UIInfo[i].referencePath] = yamlJSON["x-ui-info"].UIInfo[i];
                             }
@@ -39,12 +40,41 @@ rl.question('Enter YAML URL/PATH: ', (yamlpath) => {
                                 if (!allUiInfo[xPath]) continue;
                                 if (/_search/.test(key)) {
                                     specifications[xPath + ".search"] = searchTemplate((module || "specs"), 4, basePath + key, yamlJSON.paths[key], yamlJSON.parameters, allUiInfo[xPath]);
+                                    if(specifications[xPath + ".search"].errors) {
+                                        errors = Object.assign({}, errors, specifications[xPath + ".search"].errors);
+                                    } else {
+                                        specifications[xPath + ".search"] = specifications[xPath + ".search"].specifications;
+                                    }
                                 } else if (/_create/.test(key)) {
                                     specifications[xPath + ".create"] = createTemplate((module || "specs"), 4, basePath + key, yamlJSON.paths[key], yamlJSON.definitions, allUiInfo[xPath]);
                                     specifications[xPath + ".view"] = viewTemplate((module || "specs"), 4, basePath + key, yamlJSON.paths[key], yamlJSON.definitions, allUiInfo[xPath]);
+                                    if(specifications[xPath + ".create"].errors) {
+                                        errors = Object.assign({}, errors, specifications[xPath + ".create"].errors);
+                                    } else {
+                                        specifications[xPath + ".create"] = specifications[xPath + ".create"].specifications;
+                                    }
+                                    if(specifications[xPath + ".view"].errors) {
+                                        errors = Object.assign({}, errors, specifications[xPath + ".view"].errors);
+                                    } else {
+                                        specifications[xPath + ".view"] = specifications[xPath + ".view"].specifications;
+                                    }
                                 } else if (/_update/.test(key)) {
                                     specifications[xPath + ".update"] = updateTemplate((module || "specs"), 4, basePath + key, yamlJSON.paths[key], yamlJSON.definitions, allUiInfo[xPath]);
+                                    if(specifications[xPath + ".update"].errors) {
+                                        errors = Object.assign({}, errors, specifications[xPath + ".update"].errors);
+                                    } else {
+                                        specifications[xPath + ".update"] = specifications[xPath + ".update"].specifications;
+                                    }
                                 }
+                            }
+
+                            if(Object.keys(errors).length) {
+                                console.log("\x1b[31mERROR OCCURED! CANNOT PROCESS YAML.");
+                                for(let key in errors) {
+                                    console.log("ERROR::" + key + "-" + errors[key]);
+                                }
+                                console.log("\x1b[37m");
+                                process.exit();
                             }
 
                             let specsObj = {};

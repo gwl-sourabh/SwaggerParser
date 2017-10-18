@@ -3,7 +3,7 @@ const getTitleCase = require('../utilities/utility').getTitleCase;
 const setLabels = require('../utilities/utility').setLabels;
 
 let localeFields = {};
-
+let errors = {};
 let searchTemplate = function (module, numCols, path, config, definition) {
 	localeFields[module + ".search.title"] = getTitleCase("search");
 	let specifications = {
@@ -45,7 +45,7 @@ let searchTemplate = function (module, numCols, path, config, definition) {
 	}
 
 	setLabels(localeFields);
-	return specifications;
+	return {specifications: specifications};
 }
 
 module.exports = searchTemplate;
