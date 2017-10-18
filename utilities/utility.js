@@ -11,7 +11,7 @@ function setLabels(json) {
         json = Object.assign({}, JSON.parse(file), json);
     }
 
-    fs.writeFileSync("locale.json", JSON.stringify(json));
+    fs.writeFileSync("default.json", JSON.stringify(json));
 }
 
 function getType(type) {
