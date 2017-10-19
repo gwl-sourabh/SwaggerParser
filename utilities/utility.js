@@ -1,8 +1,10 @@
 const fs = require('fs');
+const mkdirp = require('mkdirp');
 
-function setLabels(json) {
+function setLabels(json, path) {
+    mkdirp.sync(path);
     try {
-        var file = fs.readFileSync("locale.json");
+        var file = fs.readFileSync(path + "/default.json");
     } catch (e) {
         var file = "";
     }
@@ -11,7 +13,7 @@ function setLabels(json) {
         json = Object.assign({}, JSON.parse(file), json);
     }
 
-    fs.writeFileSync("default.json", JSON.stringify(json));
+    fs.writeFileSync(path + "/default.json", JSON.stringify(json));
 }
 
 function getType(type) {
@@ -20,6 +22,7 @@ function getType(type) {
         case 'float':
         case 'double':
         case 'long':
+        case 'number':
             return 'number';
         case 'string':
             return 'text';

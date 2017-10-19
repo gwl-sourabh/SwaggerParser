@@ -33,7 +33,7 @@ let searchTemplate = function (module, numCols, path, config, definition) {
 				"jsonPath": paramKey,
 				"label": module + ".create" + paramKey,
 				"pattern": definition[paramKey].pattern,
-				"type": definition[paramKey].enum ? "singleValueList" : getType(definition[paramKey].type),
+				"type": definition[paramKey].enum ? "singleValueList" : definition[paramKey].format == "date" ? "datePicker" : getType(definition[paramKey].type),
 				"isRequired": definition[paramKey].required,
 				"isDisabled": definition[paramKey].readOnly ? true : false,
 				"defaultValue": definition[paramKey].default,
@@ -44,7 +44,7 @@ let searchTemplate = function (module, numCols, path, config, definition) {
 		}
 	}
 
-	setLabels(localeFields);
+	setLabels(localeFields, "./output/" + module);
 	return {specifications: specifications};
 }
 

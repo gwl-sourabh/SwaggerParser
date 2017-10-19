@@ -22,7 +22,7 @@ let getFieldsFromInnerObject = function(objectName, fields, definition, module, 
                     "jsonPath": (isArray ? (jPath + "[0]") : jPath) + "." + key,
                     "label": module + ".create." + key,
                     "pattern": definition[objectName].properties[key].pattern,
-                    "type": definition[objectName].properties[key].enum ? "singleValueList" : getType(definition[objectName].properties[key].type),
+                    "type": definition[objectName].properties[key].enum ? "singleValueList" : definition[objectName].properties[key].format == "date" ? 'datePicker' :  getType(definition[objectName].properties[key].type),
                     "isRequired": (definition[objectName].properties[key].required || (definition[objectName].required && definition[objectName].required.constructor == Array && definition[objectName].required.indexOf(key) > -1) ? true : false),
                     "isDisabled": definition[objectName].properties[key].readOnly ? true : false,
                     "defaultValue": definition[objectName].properties[key].default,
@@ -73,8 +73,10 @@ let createTemplate = function(module, numCols, path, config, definition, uiInfoD
     //=======================CUSTOM FILE LOGIC==========================>>
     if (uiInfoDef.ExternalData && typeof uiInfoDef.ExternalData == "object" && Object.keys(uiInfoDef.ExternalData).length) {
         for (var key in uiInfoDef.ExternalData) {
-            if (fields[key]) fields[key].url = uiInfoDef.ExternalData[key];
-            else
+            if (fields[key]) {
+                fields[key].url = uiInfoDef.ExternalData[key];
+                fields[key].type = "singleValueList";
+            } else
                 errors[key] = "Field exists in x-ui-info ExternalData section but not present in API specifications. REFERENCE PATH: " + uiInfoDef.referencePath;
         }
     }
@@ -110,7 +112,7 @@ let createTemplate = function(module, numCols, path, config, definition, uiInfoD
         specifications.groups.push(group);
     }
 
-    setLabels(localeFields);
+    setLabels(localeFields, "./output/" + module);
     if(Object.keys(errors).length) {
 
         /*console.log("\x1b[31mERROR OCCURED! CANNOT PROCESS YAML.");
