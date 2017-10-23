@@ -4,16 +4,16 @@ const setLabels = require('../utilities/utility').setLabels;
 
 let localeFields = {};
 let errors = {};
-let getFieldsFromInnerObject = function(objectName, fields, definition, module, jPath, isArray) {
-    if (definition[objectName])
-        for (let key in definition[objectName].properties) {
+let getFieldsFromInnerObject = function(reference, fields, definition, module, jPath, isArray) {
+    if (definition[reference])
+        for (let key in definition[reference].properties) {
             if (["id", "tenantId", "auditDetails", "assigner"].indexOf(key) > -1) continue;
 
-            if (definition[objectName].properties[key].type == "array") {
-                let refSplitArr = definition[objectName].properties[key].items.$ref.split("/");
+            if (definition[reference].properties[key].type == "array") {
+                let refSplitArr = definition[reference].properties[key].items.$ref.split("/");
                 getFieldsFromInnerObject(refSplitArr[refSplitArr.length - 1], fields, definition, module, (isArray ? (jPath + "[0]") : jPath) + "." + key, true);
-            } else if (definition[objectName].properties[key].$ref) {
-                let refSplitArr = definition[objectName].properties[key].$ref.split("/");
+            } else if (definition[reference].properties[key].$ref) {
+                let refSplitArr = definition[reference].properties[key].$ref.split("/");
                 getFieldsFromInnerObject(refSplitArr[refSplitArr.length - 1], fields, definition, module, (isArray ? (jPath + "[0]") : jPath) + "." + key);
             } else {
                 localeFields[module + ".create." + key] = getTitleCase(key);
@@ -21,14 +21,14 @@ let getFieldsFromInnerObject = function(objectName, fields, definition, module, 
                     "name": key,
                     "jsonPath": (isArray ? (jPath + "[0]") : jPath) + "." + key,
                     "label": module + ".create." + key,
-                    "pattern": definition[objectName].properties[key].pattern,
-                    "type": definition[objectName].properties[key].enum ? "singleValueList" : definition[objectName].properties[key].format == "date" ? 'date' :  getType(definition[objectName].properties[key].type),
-                    "isRequired": (definition[objectName].properties[key].required || (definition[objectName].required && definition[objectName].required.constructor == Array && definition[objectName].required.indexOf(key) > -1) ? true : false),
-                    "isDisabled": definition[objectName].properties[key].readOnly ? true : false,
-                    "defaultValue": definition[objectName].properties[key].default,
-                    "maxLength": definition[objectName].properties[key].maxLength,
-                    "minLength": definition[objectName].properties[key].minLength,
-                    "patternErrorMsg": definition[objectName].properties[key].pattern ? (module + ".create.field.message." + key) : ""
+                    "pattern": definition[reference].properties[key].pattern,
+                    "type": definition[reference].properties[key].enum ? "singleValueList" : definition[reference].properties[key].format == "date" ? 'date' :  getType(definition[reference].properties[key].type),
+                    "isRequired": (definition[reference].properties[key].required || (definition[reference].required && definition[reference].required.constructor == Array && definition[reference].required.indexOf(key) > -1) ? true : false),
+                    "isDisabled": definition[reference].properties[key].readOnly ? true : false,
+                    "defaultValue": definition[reference].properties[key].default,
+                    "maxLength": definition[reference].properties[key].maxLength,
+                    "minLength": definition[reference].properties[key].minLength,
+                    "patternErrorMsg": definition[reference].properties[key].pattern ? (module + ".create.field.message." + key) : ""
                 };
             }
         }
@@ -52,22 +52,25 @@ let updateTemplate = function(module, numCols, path, config, definition, uiInfoD
     }
     let splitArr = config["post"].parameters[ind].schema.$ref.split("/");
     let properties = definition[splitArr[splitArr.length - 1]].properties;
+    let reference;
     for (let key in properties) {
         if (key != "requestInfo") {
             //IF ARRAY
             if(properties[key].type == "array") {
                 let propertiesArr = properties[key].items.$ref.split("/");
-                specifications.objectName = propertiesArr[propertiesArr.length - 1];
+                specifications.objectName = key;
+                reference = propertiesArr[propertiesArr.length - 1];
                 isArr = true;
             } else {
                 let propertiesArr = properties[key].$ref.split("/");
-                specifications.objectName = propertiesArr[propertiesArr.length - 1];
+                specifications.objectName = key;
+                reference = propertiesArr[propertiesArr.length - 1];
             }
             break;
         }
     }
 
-    getFieldsFromInnerObject(specifications.objectName, fields, definition, module, isArr ? (specifications.objectName + "[0]") : specifications.objectName);
+    getFieldsFromInnerObject(reference, fields, definition, module, isArr ? (specifications.objectName + "[0]") : specifications.objectName);
 
     //=======================CUSTOM FILE LOGIC==========================>>
     if(uiInfoDef.ExternalData && typeof uiInfoDef.ExternalData == "object" && Object.keys(uiInfoDef.ExternalData).length) {
